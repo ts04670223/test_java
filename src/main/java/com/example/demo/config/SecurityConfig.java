@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -41,9 +42,16 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        AuthenticationEntryPoint unauthorizedHandler = (request, response, ex) -> {
+            response.setContentType("application/json;charset=UTF-8");
+            response.setStatus(401);
+            response.getWriter().write("{\"error\":\"\u672a登入，請提供有效 Token\"}");
+        };
+
         http.csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedHandler))
                 .authorizeHttpRequests(authz -> authz
                         // 公開 API
                         .requestMatchers("/api/auth/**").permitAll()
@@ -63,7 +71,7 @@ public class SecurityConfig {
 
                         // 需要認證的 API (暫時允許購物車 API 進行測試)
                         .requestMatchers("/api/cart/**").permitAll()
-                        .requestMatchers("/api/orders/**").authenticated()
+                        .requestMatchers("/api/orders/**").authenticated() // 需要認證，管理員操作由 @PreAuthorize("hasRole('ADMIN')") 保護
                         .requestMatchers("/api/wishlist/**").authenticated()
                         .requestMatchers("/api/user/**").authenticated()
 

@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -60,7 +61,16 @@ public class OrderController {
      * 取得用戶的所有訂單
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getUserOrders(@PathVariable Long userId) {
+    public ResponseEntity<?> getUserOrders(@PathVariable Long userId, Authentication authentication) {
+        // 驗證是否為本人或管理員（不依賴 SpEL 參數綁定）
+        com.example.demo.model.User currentUser = (com.example.demo.model.User) authentication.getPrincipal();
+        boolean isAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (!currentUser.getId().equals(userId) && !isAdmin) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "無權限存取他人訂單");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        }
         try {
             List<Order> orders = orderService.getUserOrders(userId);
             return ResponseEntity.ok(orders);

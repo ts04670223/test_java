@@ -30,7 +30,21 @@ export default function Wishlist() {
   // 獲取願望清單
   const { data: wishlistItems, isLoading } = useQuery(
     'wishlist',
-    () => api.get('/wishlist').then(res => res.data),
+    () => api.get('/wishlist').then(res => {
+      const items = res.data?.items ?? res.data ?? [];
+      return items.map(item => ({
+        id: item.id,
+        createdAt: item.createdAt,
+        product: {
+          id: item.productId,
+          name: item.productName,
+          price: item.productPrice,
+          description: item.productDescription || '',
+          tags: [],
+          images: (item.productImages || []).map(url => ({ url })),
+        }
+      }));
+    }),
     {
       onError: (error) => {
         if (error.response?.status === 401) {
@@ -42,7 +56,7 @@ export default function Wishlist() {
 
   // 從願望清單移除
   const removeFromWishlistMutation = useMutation(
-    (productId) => api.delete(`/wishlist/${productId}`),
+    (productId) => api.delete(`/wishlist/items/${productId}`),
     {
       onSuccess: () => {
         toast.success('已從願望清單移除');

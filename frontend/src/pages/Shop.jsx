@@ -1,9 +1,9 @@
 ﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ShoppingCart, MessageCircle, LogOut, User, Search, Trash2, Menu, X, Filter, Bot } from 'lucide-react';
+import { ShoppingCart, MessageCircle, LogOut, User, Search, Trash2, Menu, X, Filter, Bot, Heart } from 'lucide-react';
 
-import { productAPI, cartAPI, chatAPI } from '../services/api';
+import { productAPI, cartAPI, chatAPI, wishlistAPI } from '../services/api';
 import { useAuthStore } from '../stores/authStore';
 import { cartEvents } from '../utils/cartEvents';
 
@@ -43,11 +43,13 @@ function Shop() {
   const [showMobileCart, setShowMobileCart] = useState(false); 
   const [showMobileFilter, setShowMobileFilter] = useState(false);
   const [openClearCartDialog, setOpenClearCartDialog] = useState(false);
+  const [wishlistedIds, setWishlistedIds] = useState(new Set());
 
   useEffect(() => {
     loadProducts();
     loadCart();
-    loadUnreadCount(); 
+    loadUnreadCount();
+    loadWishlist();
     const interval = setInterval(loadUnreadCount, 10000);
     return () => clearInterval(interval);
   }, []);
@@ -154,6 +156,38 @@ function Shop() {
       const response = await chatAPI.getUnreadCount(user.id);
       setUnreadCount(response.data?.unreadCount || response.data?.data?.unreadCount || 0);
     } catch (error) { console.error(error); }
+  };
+
+  const loadWishlist = async () => {
+    if (!user?.id) return;
+    try {
+      const response = await wishlistAPI.getWishlist();
+      const items = response.data?.items ?? response.data ?? [];
+      const ids = new Set(items.map(item => item.productId ?? item.product?.id));
+      setWishlistedIds(ids);
+    } catch (error) {
+      // 未登入或其他錯誤，不影響頁面
+    }
+  };
+
+  const toggleWishlist = async (productId) => {
+    if (!user?.id) {
+      toast.error('請先登入');
+      return;
+    }
+    try {
+      if (wishlistedIds.has(productId)) {
+        await wishlistAPI.removeFromWishlist(productId);
+        setWishlistedIds(prev => { const next = new Set(prev); next.delete(productId); return next; });
+        toast.success('已從願望清單移除');
+      } else {
+        await wishlistAPI.addToWishlist(productId);
+        setWishlistedIds(prev => new Set(prev).add(productId));
+        toast.success('已加入願望清單');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || '操作失敗');
+    }
   };
 
   const goToCheckout = () => {
@@ -344,13 +378,25 @@ function Shop() {
                        <span className="text-xs text-muted-foreground">庫存: {product.stock}</span>
                      </div>
                    </CardContent>
-                   <CardFooter className="p-4 pt-0">
+                   <CardFooter className="p-4 pt-0 flex gap-2">
                      <Button 
-                       className="w-full" 
+                       className="flex-1" 
                        disabled={product.stock === 0}
                        onClick={() => addToCart(product.id)}
                      >
                        {product.stock === 0 ? '缺貨' : '加入購物車'}
+                     </Button>
+                     <Button
+                       variant="outline"
+                       size="icon"
+                       onClick={() => toggleWishlist(product.id)}
+                       title={wishlistedIds.has(product.id) ? '從願望清單移除' : '加入願望清單'}
+                     >
+                       <Heart
+                         className="h-4 w-4"
+                         fill={wishlistedIds.has(product.id) ? 'currentColor' : 'none'}
+                         color={wishlistedIds.has(product.id) ? '#ef4444' : 'currentColor'}
+                       />
                      </Button>
                    </CardFooter>
                  </Card>

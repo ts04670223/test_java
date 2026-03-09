@@ -117,15 +117,15 @@ export const orderAPI = {
   createOrder: (params) => api.post(`/orders${params}`),
   getOrders: () => api.get('/orders'),
   getOrder: (orderId) => api.get(`/orders/${orderId}`),
-  cancelOrder: (orderId) => api.put(`/orders/${orderId}/cancel`),
+  cancelOrder: (orderId, userId) => api.post(`/orders/${orderId}/cancel`, null, { params: { userId } }),
   getUserOrders: (userId) => api.get(`/orders/user/${userId}`),
 };
 
 // 願望清單相關 API
 export const wishlistAPI = {
   getWishlist: () => api.get('/wishlist'),
-  addToWishlist: (productId) => api.post('/wishlist', { productId }),
-  removeFromWishlist: (productId) => api.delete(`/wishlist/${productId}`),
+  addToWishlist: (productId) => api.post('/wishlist/items', null, { params: { productId } }),
+  removeFromWishlist: (productId) => api.delete(`/wishlist/items/${productId}`),
 };
 
 // 用戶相關 API

@@ -42,7 +42,7 @@ function Orders() {
       return;
     }
     loadOrders();
-  }, []);
+  }, [user?.id]);
 
   const loadOrders = async () => {
     if (!user?.id) return;

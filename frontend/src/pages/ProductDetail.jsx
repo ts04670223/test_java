@@ -124,8 +124,8 @@ export default function ProductDetail() {
   const toggleWishlistMutation = useMutation(
     () => {
       return isWishlisted
-        ? api.delete(`/wishlist/${id}`)
-        : api.post('/wishlist', { productId: id });
+        ? api.delete(`/wishlist/items/${id}`)
+        : api.post('/wishlist/items', null, { params: { productId: id } });
     },
     {
       onSuccess: () => {
