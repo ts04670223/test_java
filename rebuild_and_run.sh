@@ -76,7 +76,12 @@ rm -rf "$BUILD_DIR/target"
 
 echo "  -> 同步原始碼到本地 build 目錄: $BUILD_DIR"
 mkdir -p "$BUILD_DIR"
-rsync -a --exclude='target/' --exclude='.git/' --exclude='.vagrant/' --exclude='node_modules/' --exclude='*.log' "$APP_DIR/" "$BUILD_DIR/"
+# --no-perms --no-owner --no-group: vboxsf 不支援 Unix 權限，略過省時間
+# --size-only: vboxsf 時間戳不可靠，改用檔案大小判斷是否需要複製
+rsync -a --size-only --no-perms --no-owner --no-group \
+    --exclude='target/' --exclude='.git/' --exclude='.vagrant/' \
+    --exclude='node_modules/' --exclude='*.log' \
+    "$APP_DIR/" "$BUILD_DIR/"
 
 cd "$BUILD_DIR"
 echo "  -> 開始編譯..."

@@ -18,6 +18,7 @@ import Wishlist from './pages/Wishlist';
 import Chat from './pages/Chat';
 // import AiAssistant from './pages/AiAssistant'; // TODO: AI 功能暫時停用
 import AdminDashboard from './pages/admin/Dashboard';
+import PasskeyManager from './pages/PasskeyManager';
 
 // Components
 import Layout from './components/Layout';
@@ -75,6 +76,7 @@ function App() {
               <Route path="orders" element={<Orders />} />
               <Route path="profile" element={<Profile />} />
               <Route path="wishlist" element={<Wishlist />} />
+              <Route path="passkeys" element={<PasskeyManager />} />
 
               {/* Admin Routes */}
               <Route

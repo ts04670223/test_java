@@ -16,12 +16,15 @@ import {
   Phone,
   Edit,
   Security,
-  Notifications
+  Notifications,
+  Key
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 
 export default function Profile() {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
 
   if (!user) {
     return (
@@ -39,7 +42,7 @@ export default function Profile() {
 
       <Grid container spacing={4}>
         {/* 基本資料 */}
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
@@ -60,7 +63,7 @@ export default function Profile() {
               <Divider sx={{ my: 3 }} />
 
               <Grid container spacing={3}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     <Person sx={{ mr: 2, color: 'text.secondary' }} />
                     <Box>
@@ -72,7 +75,7 @@ export default function Profile() {
                   </Box>
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     <Email sx={{ mr: 2, color: 'text.secondary' }} />
                     <Box>
@@ -84,7 +87,7 @@ export default function Profile() {
                   </Box>
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     <Phone sx={{ mr: 2, color: 'text.secondary' }} />
                     <Box>
@@ -96,7 +99,7 @@ export default function Profile() {
                   </Box>
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     <Box>
                       <Typography variant="body2" color="text.secondary">
@@ -130,7 +133,7 @@ export default function Profile() {
         </Grid>
 
         {/* 快速操作 */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -157,8 +160,19 @@ export default function Profile() {
               <Button
                 fullWidth
                 variant="outlined"
+                sx={{ mb: 2 }}
               >
                 付款方式
+              </Button>
+
+              <Button
+                fullWidth
+                variant="outlined"
+                color="primary"
+                startIcon={<Key />}
+                onClick={() => navigate('/passkeys')}
+              >
+                Passkey 管理（無密碼驗證）
               </Button>
             </CardContent>
           </Card>

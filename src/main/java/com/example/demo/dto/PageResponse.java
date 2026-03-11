@@ -13,8 +13,6 @@ public class PageResponse<T> {
     private boolean hasNext;
     private boolean hasPrevious;
 
-    public PageResponse() {}
-
     public PageResponse(List<T> content, int page, int size, long totalElements) {
         this.content = content;
         this.page = page;

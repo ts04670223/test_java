@@ -128,6 +128,23 @@ export const wishlistAPI = {
   removeFromWishlist: (productId) => api.delete(`/wishlist/items/${productId}`),
 };
 
+// Passkeys / WebAuthn API
+export const passkeyAPI = {
+  // 註冊流程
+  startRegistration: (username, displayName) =>
+    api.post('/passkeys/registration/start', { username, displayName }),
+  finishRegistration: (username, displayName, rawResponse) =>
+    api.post('/passkeys/registration/finish', { username, displayName, rawResponse }),
+  // 認證流程（username 可為 null，支援 discoverable credential）
+  startAssertion: (username = null) =>
+    api.post('/passkeys/assertion/start', null, { params: username ? { username } : {} }),
+  finishAssertion: (rawResponse, username = null) =>
+    api.post('/passkeys/assertion/finish', { username, rawResponse }),
+  // 管理
+  listPasskeys: () => api.get('/passkeys'),
+  deletePasskey: (credentialId) => api.delete(`/passkeys/${encodeURIComponent(credentialId)}`),
+};
+
 // 用戶相關 API
 export const userAPI = {
   getProfile: () => api.get('/user/profile'),

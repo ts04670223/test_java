@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -50,7 +51,10 @@ public class SecurityConfig {
 
         http.csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // WebAuthn registration/assertion 端點需要 session 儲存 challenge；
+                // 其他 API 維持 STATELESS 行為（JWT 驗證）
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedHandler))
                 .authorizeHttpRequests(authz -> authz
                         // 公開 API
@@ -65,6 +69,10 @@ public class SecurityConfig {
                         // AI 助手 API：全部公開（LLM 不存取用戶敏感資料）
                         .requestMatchers("/api/ai/**").permitAll()
 
+                        // Passkeys / WebAuthn 公開端點（啟動與完成不需要預先登入）
+                        .requestMatchers("/api/passkeys/registration/**").permitAll()
+                        .requestMatchers("/api/passkeys/assertion/**").permitAll()
+
                         // 用戶相關 API - 允許讀取用戶信息 (GET)
                         .requestMatchers("/api/users/*/profile").authenticated()
                         .requestMatchers("/api/users/**").permitAll()
@@ -75,14 +83,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/wishlist/**").authenticated()
                         .requestMatchers("/api/user/**").authenticated()
 
+                        // Passkeys 管理需要登入（查看、刪除）
+                        .requestMatchers("/api/passkeys/**").authenticated()
+
                         // 管理員 API
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // 其他 API 暫時允許訪問 (除了前面已經定義的規則)
-                        // .requestMatchers("/api/**").permitAll() // 註解這行：這是導致權限失效的元兇
-
                         // 其他所有請求都需要認證
-                        .anyRequest().authenticated()) // 將 permitAll 改為 authenticated
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
