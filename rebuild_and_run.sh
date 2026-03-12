@@ -71,21 +71,22 @@ echo ""
 echo "[3/4] 執行 Maven clean package (跳過測試)..."
 
 # 在 VM 本地目錄 build，完全避開 vboxsf 的 Windows 檔案鎖問題
-echo "  -> 清除舊的 build target..."
-rm -rf "$BUILD_DIR/target"
+# 優化：不再每次刪除 target，保留增量編譯能力，僅清理最終 jar 確保新舊替換
+echo "  -> 準備本地 build 目錄: $BUILD_DIR"
+rm -f "$JAR_PATH"  
 
-echo "  -> 同步原始碼到本地 build 目錄: $BUILD_DIR"
+echo "  -> 同步原始碼 (僅同步有變更的文件)..."
 mkdir -p "$BUILD_DIR"
-# --no-perms --no-owner --no-group: vboxsf 不支援 Unix 權限，略過省時間
-# --size-only: vboxsf 時間戳不可靠，改用檔案大小判斷是否需要複製
+# rsync 優化：排除不必要的目錄，僅更新變更檔案
 rsync -a --size-only --no-perms --no-owner --no-group \
     --exclude='target/' --exclude='.git/' --exclude='.vagrant/' \
     --exclude='node_modules/' --exclude='*.log' \
     "$APP_DIR/" "$BUILD_DIR/"
 
 cd "$BUILD_DIR"
-echo "  -> 開始編譯..."
-mvn clean package -DskipTests
+echo "  -> 開始編譯 (增量模式)..."
+# 改用 install 而非 clean package，且跳過 javadoc/source 加速
+mvn install -DskipTests -Dmaven.javadoc.skip=true -Dmaven.source.skip=true -Dmaven.test.skip=true
 
 if [ ! -f "$JAR_PATH" ]; then
     echo "  [錯誤] 找不到 JAR 檔：$JAR_PATH"
