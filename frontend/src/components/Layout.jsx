@@ -32,8 +32,9 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { cartAPI, chatAPI } from '../services/api';
+import { cartAPI, wishlistAPI } from '../services/api';
 import { cartEvents } from '../utils/cartEvents';
+import { wishlistEvents } from '../utils/wishlistEvents';
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -42,24 +43,35 @@ const Layout = () => {
 
   const { user, logout } = useAuthStore();
   const [cartCount, setCartCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     loadCartCount();
+    loadWishlistCount();
 
     // 訂閱購物車變更事件
-    const unsubscribe = cartEvents.subscribe(() => {
+    const unsubscribeCart = cartEvents.subscribe(() => {
       loadCartCount();
     });
 
+    // 訂閱願望清單變更事件
+    const unsubscribeWishlist = wishlistEvents.subscribe(() => {
+      loadWishlistCount();
+    });
+
     // 每10秒更新一次購物車數量
-    const interval = setInterval(loadCartCount, 10000);
+    const interval = setInterval(() => {
+      loadCartCount();
+      loadWishlistCount();
+    }, 10000);
 
     return () => {
       clearInterval(interval);
-      unsubscribe();
+      unsubscribeCart();
+      unsubscribeWishlist();
     };
   }, [user?.id]);
 
@@ -73,6 +85,19 @@ const Layout = () => {
       setCartCount(count);
     } catch (error) {
       console.error('載入購物車數量失敗:', error);
+    }
+  };
+
+  const loadWishlistCount = async () => {
+    if (!user?.id) return;
+
+    try {
+      const response = await wishlistAPI.getWishlist();
+      const wishlistData = response.data?.data || response.data;
+      const count = Array.isArray(wishlistData) ? wishlistData.length : (wishlistData?.items?.length || 0);
+      setWishlistCount(count);
+    } catch (error) {
+      console.error('載入願望清單數量失敗:', error);
     }
   };
 
@@ -162,6 +187,10 @@ const Layout = () => {
                 >
                   {item.text === '購物車' ? (
                     <Badge badgeContent={cartCount} color="secondary">
+                      {item.icon}
+                    </Badge>
+                  ) : item.text === '願望清單' ? (
+                    <Badge badgeContent={wishlistCount} color="error">
                       {item.icon}
                     </Badge>
                   ) : (
