@@ -1,27 +1,47 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.*;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.demo.dto.ApiResponse;
+import com.example.demo.dto.LoginResponse;
+import com.example.demo.dto.PasskeyAssertionFinishRequest;
+import com.example.demo.dto.PasskeyCredentialResponse;
+import com.example.demo.dto.PasskeyRegistrationFinishRequest;
+import com.example.demo.dto.PasskeyRegistrationStartRequest;
+import com.example.demo.dto.UserResponse;
 import com.example.demo.model.PasskeyCredential;
 import com.example.demo.model.User;
 import com.example.demo.service.JwtService;
 import com.example.demo.service.WebAuthnService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yubico.webauthn.AssertionRequest;
-import com.yubico.webauthn.data.*;
+import com.yubico.webauthn.data.AuthenticatorAssertionResponse;
+import com.yubico.webauthn.data.AuthenticatorAttestationResponse;
+import com.yubico.webauthn.data.ClientAssertionExtensionOutputs;
+import com.yubico.webauthn.data.ClientRegistrationExtensionOutputs;
+import com.yubico.webauthn.data.PublicKeyCredential;
+import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
 import com.yubico.webauthn.exception.AssertionFailedException;
 import com.yubico.webauthn.exception.RegistrationFailedException;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * WebAuthn / Passkeys API
@@ -125,6 +145,7 @@ public class WebAuthnController {
             PasskeyCredential saved = webAuthnService.finishRegistration(
                     username, options, credential, displayName);
 
+            log.info("Passkey 註冊成功: credentialDbId={}", saved.getId());
             PasskeyCredentialResponse resp = toResponse(saved);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.success("Passkey 登錄成功！下次可直接使用生物辨識登入", resp));
@@ -205,6 +226,7 @@ public class WebAuthnController {
             loginResponse.setToken(jwt);
             loginResponse.setUser(userResponse);
 
+            log.info("Passkey 登入成功: userId={}", user.getId());
             return ResponseEntity.ok(ApiResponse.success("Passkey 登入成功", loginResponse));
 
         } catch (AssertionFailedException e) {
@@ -247,6 +269,7 @@ public class WebAuthnController {
         }
         try {
             webAuthnService.deleteCredential(user.getUsername(), credentialId);
+            log.info("Passkey 已刪除: userId={}, credentialDbId={}", user.getId(), credentialId);
             return ResponseEntity.ok(ApiResponse.success("Passkey 已刪除", null));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

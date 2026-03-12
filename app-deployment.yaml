@@ -25,6 +25,10 @@ spec:
       labels:
         io.kompose.service: app
     spec:
+      # 讓所有 volume（包含 emptyDir）以 GID 1000 掛載，
+      # 使 spring 使用者（GID 1000）可以寫入 /app/logs
+      securityContext:
+        fsGroup: 1000
       containers:
         - env:
             - name: JAVA_OPTS
@@ -53,43 +57,41 @@ spec:
               value: qwen2.5:0.5b
           image: vagrant-app:latest
           imagePullPolicy: Never
-          # 存活檢查 - 檢測應用是否還在運行
+          # 活體檢查
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: 8080
               scheme: HTTP
-            initialDelaySeconds: 90
-            periodSeconds: 30
-            timeoutSeconds: 10
+            initialDelaySeconds: 30  # StartupProbe 成功後立即接管，無需額外等待
+            periodSeconds: 15
+            timeoutSeconds: 5
             failureThreshold: 3
-          # 就緒檢查 - 確保應用完全就緒後才接收流量
+          # 就緒檢查
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8080
               scheme: HTTP
-            initialDelaySeconds: 30
-            periodSeconds: 10
+            initialDelaySeconds: 5  # StartupProbe 成功後立即開始檢查
+            periodSeconds: 10        # 檢查頻率加快，讓Pod更快變為Ready
             timeoutSeconds: 5
             failureThreshold: 3
-          # 啟動探針 - 給應用更多時間完成初始化
-          # initialDelaySeconds=60: 等 Flannel + Spring Boot 初始化
-          # failureThreshold=36: 最多等 36×10=360 秒才判定失敗
+          # 啟動探針
           startupProbe:
             httpGet:
               path: /actuator/health
               port: 8080
               scheme: HTTP
-            initialDelaySeconds: 60
-            periodSeconds: 10
+            initialDelaySeconds: 30  # 應用一啟動就開始嘗試連接
+            periodSeconds: 10        # 高頻率檢查，抓準啟動完成的那一刻
             timeoutSeconds: 5
-            failureThreshold: 36
-          # 資源限制 - 防止資源耗盡
+            failureThreshold: 18    # 2s * 60 = 120s 總等待時間
+          # 資源限制
           resources:
             requests:
               memory: "256Mi"
-              cpu: "100m"
+              cpu: "500m"     # 提高保證算力，加速啟動
             limits:
               memory: "1Gi"
               cpu: "1000m"
@@ -99,15 +101,16 @@ spec:
               protocol: TCP
           volumeMounts:
             - mountPath: /app/logs
-              name: app-cm0
+              name: app-logs
             - mountPath: /app/app.jar
               name: app-jar
               subPath: spring-boot-demo-0.0.1-SNAPSHOT.jar
       restartPolicy: Always
       volumes:
-        - configMap:
-            name: app-cm0
-          name: app-cm0
+        - name: app-logs
+          hostPath:
+            path: /vagrant/logs
+            type: DirectoryOrCreate
         - name: app-jar
           hostPath:
             path: /vagrant/target

@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,6 +30,8 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/orders")
 public class OrderController {
 
+    private static final Logger log = LoggerFactory.getLogger(OrderController.class);
+
     private final OrderService orderService;
 
     public OrderController(OrderService orderService) {
@@ -45,6 +49,7 @@ public class OrderController {
                     request.getShippingAddress(),
                     request.getPhone(),
                     request.getNote());
+            log.info("訂單建立成功: orderId={}, userId={}", order.getId(), request.getUserId());
             return ResponseEntity.status(HttpStatus.CREATED).body(order);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
@@ -67,6 +72,7 @@ public class OrderController {
         boolean isAdmin = currentUser.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         if (!currentUser.getId().equals(userId) && !isAdmin) {
+            log.warn("未授權存取他人訂單: currentUserId={}, requestedUserId={}", currentUser.getId(), userId);
             Map<String, String> error = new HashMap<>();
             error.put("error", "無權限存取他人訂單");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
@@ -132,6 +138,7 @@ public class OrderController {
             @RequestParam OrderStatus status) {
         try {
             Order order = orderService.updateOrderStatus(orderId, status);
+            log.info("訂單狀態已更新: orderId={}, newStatus={}", orderId, status);
             return ResponseEntity.ok(order);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
@@ -153,6 +160,7 @@ public class OrderController {
             @RequestParam Long userId) {
         try {
             Order order = orderService.cancelOrder(orderId, userId);
+            log.info("訂單已取消: orderId={}, userId={}", orderId, userId);
             return ResponseEntity.ok(order);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();

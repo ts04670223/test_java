@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,6 +25,8 @@ import com.example.demo.service.ProductService;
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
+
+    private static final Logger log = LoggerFactory.getLogger(ProductController.class);
 
     private final ProductService productService;
 
@@ -122,6 +126,7 @@ public class ProductController {
     public ResponseEntity<?> createProduct(@RequestBody Product product) {
         try {
             Product createdProduct = productService.createProduct(product);
+            log.info("商品已建立: productId={}", createdProduct.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
@@ -138,6 +143,7 @@ public class ProductController {
     public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody Product product) {
         try {
             Product updatedProduct = productService.updateProduct(id, product);
+            log.info("商品已更新: productId={}", id);
             return ResponseEntity.ok(updatedProduct);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
@@ -158,6 +164,7 @@ public class ProductController {
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         try {
             productService.deactivateProduct(id);
+            log.info("商品已停用: productId={}", id);
             Map<String, String> response = new HashMap<>();
             response.put("message", "商品已停用");
             return ResponseEntity.ok(response);

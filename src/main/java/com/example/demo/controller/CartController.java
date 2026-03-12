@@ -1,20 +1,32 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.Cart;
-import com.example.demo.service.CartService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.demo.model.Cart;
+import com.example.demo.service.CartService;
+
 @RestController
 @RequestMapping("/api/cart")
 public class CartController {
+
+    private static final Logger log = LoggerFactory.getLogger(CartController.class);
 
     private final CartService cartService;
 
@@ -74,6 +86,7 @@ public class CartController {
             @RequestParam(defaultValue = "1") Integer quantity) {
         try {
             Cart cart = cartService.addItemToCart(userId, productId, quantity);
+            log.info("加入購物車: userId={}, productId={}, quantity={}", userId, productId, quantity);
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "商品已添加到購物車");
@@ -141,6 +154,7 @@ public class CartController {
             @PathVariable Integer cartItemId) {
         try {
             Cart cart = cartService.removeItemFromCart(userId, cartItemId);
+            log.info("移除購物車商品: userId={}, cartItemId={}", userId, cartItemId);
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "商品已移除");
@@ -172,6 +186,7 @@ public class CartController {
     public ResponseEntity<?> clearCart(@PathVariable Long userId) {
         try {
             cartService.clearCart(userId);
+            log.info("清空購物車: userId={}", userId);
             Map<String, String> response = new HashMap<>();
             response.put("message", "購物車已清空");
             return ResponseEntity.ok(response);

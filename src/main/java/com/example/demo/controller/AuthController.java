@@ -79,13 +79,16 @@ public class AuthController {
             LoginResponse loginResponse = new LoginResponse();
             loginResponse.setToken(token);
             loginResponse.setUser(userResponse);
-            
+
+            logger.info("用戶登入成功: userId={}", user.getId());
             return ResponseEntity.ok(ApiResponse.success("登入成功", loginResponse));
             
         } catch (BadCredentialsException e) {
+            logger.warn("登入失敗（帳號或密碼錯誤）");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error("用戶名或密碼錯誤"));
         } catch (Exception e) {
+            logger.error("登入時發生未預期錯誤", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("登入失敗", e.getMessage()));
         }
@@ -112,13 +115,16 @@ public class AuthController {
             userResponse.setFirstName(user.getFirstName());
             userResponse.setLastName(user.getLastName());
 
+            logger.info("新用戶註冊成功: userId={}", user.getId());
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("註冊成功", userResponse));
 
         } catch (RuntimeException e) {
+            logger.warn("用戶註冊失敗: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
+            logger.error("註冊時發生未預期錯誤", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("註冊失敗", e.getMessage()));
         }
