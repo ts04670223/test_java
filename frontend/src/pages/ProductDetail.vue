@@ -249,6 +249,17 @@ async function loadProduct() {
   }
 }
 
+async function loadWishlistStatus() {
+  if (!isAuthenticated.value) return
+  isWishlisted.value = false
+  try {
+    const response = await wishlistAPI.getWishlist()
+    const items = response.data?.items ?? []
+    const productId = Number(route.params.id)
+    isWishlisted.value = items.some(item => item.productId === productId)
+  } catch {}
+}
+
 async function loadReviews() {
   try {
     const res = await api.get(`/products/${route.params.id}/reviews`)
@@ -309,10 +320,12 @@ async function handleSubmitReview() {
 onMounted(() => {
   loadProduct()
   loadReviews()
+  loadWishlistStatus()
 })
 
 watch(() => route.params.id, () => {
   loadProduct()
   loadReviews()
+  loadWishlistStatus()
 })
 </script>

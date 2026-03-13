@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -47,10 +48,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             jwt = authHeader.substring(7);
             username = jwtService.extractUsername(jwt);
 
-            // 如果用戶名不為空且當前沒有認證信息
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (username != null) {
                 UserDetails userDetails = userService.loadUserByUsername(username);
-                System.out.println("Debug - Verify Token for: " + username);
 
                 if (jwtService.validateToken(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
@@ -58,19 +57,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             null,
                             userDetails.getAuthorities());
 
-                    // [DEBUG] 打印認證成功的用戶和權限
-                    System.out.println("Debug - JWT Auth Success: " + username);
-                    System.out.println("Debug - Authorities: " + userDetails.getAuthorities());
-
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                } else {
-                    System.out.println("Debug - Token Invalid for user: " + username);
+                    // 每次都建立全新的 SecurityContext，確保不同用戶的請求完全隔離
+                    SecurityContext context = SecurityContextHolder.createEmptyContext();
+                    context.setAuthentication(authToken);
+                    SecurityContextHolder.setContext(context);
                 }
             }
         } catch (Exception e) {
             // JWT 解析失敗時，不設置認證信息，讓後續過濾器處理
-            System.out.println("Debug - JWT Exception: " + e.getMessage());
-            e.printStackTrace(); // Print full stack trace
             logger.debug("JWT 認證失敗: " + e.getMessage());
         }
 
