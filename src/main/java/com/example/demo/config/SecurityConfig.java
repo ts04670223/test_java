@@ -76,8 +76,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/*/profile").authenticated()
                         .requestMatchers("/api/users/**").permitAll()
 
-                        // 需要認證的 API (暫時允許購物車 API 進行測試)
-                        .requestMatchers("/api/cart/**").permitAll()
+                        // 購物車 API 必須認證
+                        .requestMatchers("/api/cart/**").authenticated()
                         .requestMatchers("/api/orders/**").authenticated() // 需要認證，管理員操作由 @PreAuthorize("hasRole('ADMIN')") 保護
                         .requestMatchers("/api/wishlist/**").authenticated()
                         .requestMatchers("/api/user/**").authenticated()
