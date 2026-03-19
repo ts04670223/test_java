@@ -60,16 +60,16 @@ start-dashboard.bat
 
 詳細說明請查看：
 - [k8s-dashboard/README.md](k8s-dashboard/README.md) - 完整使用說明
-- [docs/K8S-DASHBOARD.md](docs/K8S-DASHBOARD.md) - 詳細操作指南
+- [docs/infrastructure/K8S-DASHBOARD.md](docs/infrastructure/K8S-DASHBOARD.md) - 詳細操作指南
 
 ## 📚 文檔
 
-- **[快速開始指南](docs/QUICKSTART.md)** - 5 分鐘快速部署
-- **[安裝詳細說明](docs/INSTALL.md)** - 完整安裝步驟
-- **[Docker 使用指南](docs/DOCKER-GUIDE.md)** - Docker 操作說明
-- **[容器訪問指南](docs/DOCKER-ACCESS.md)** - 進入容器和調試
-- **[K8s Dashboard 指南](docs/K8S-DASHBOARD.md)** - Kubernetes 管理頁面
-- **[故障排查](docs/TROUBLESHOOTING.md)** - 常見問題解決
+- **[快速開始指南](docs/getting-started/QUICKSTART.md)** - 5 分鐘快速部署
+- **[安裝詳細說明](docs/getting-started/INSTALL.md)** - 完整安裝步驟
+- **[Docker 使用指南](docs/infrastructure/DOCKER-GUIDE.md)** - Docker 操作說明
+- **[容器訪問指南](docs/infrastructure/DOCKER-ACCESS.md)** - 進入容器和調試
+- **[K8s Dashboard 指南](docs/infrastructure/K8S-DASHBOARD.md)** - Kubernetes 管理頁面
+- **[故障排查](docs/troubleshooting/TROUBLESHOOTING.md)** - 常見問題解決
 
 ## 🛠️ 常用命令
 

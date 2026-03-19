@@ -23,7 +23,7 @@ docker ps                   # 查看容器
 exit                        # 退出 VM
 ```
 
-📖 詳細說明請參閱 [Vagrant 使用指南](docs/VAGRANT-GUIDE.md)
+📖 詳細說明請參閱 [Vagrant 使用指南](docs/getting-started/VAGRANT-GUIDE.md)
 
 ---
 
@@ -42,33 +42,39 @@ exit                        # 退出 VM
 
 訪問：http://localhost:8080
 
-📖 詳細步驟請參閱 [快速開始指南](docs/QUICKSTART.md)
+📖 詳細步驟請參閱 [快速開始指南](docs/getting-started/QUICKSTART.md)
 
 ## 📚 文檔
 
-### 核心文檔
-- **[安裝包總覽](docs/archive/PACKAGES_OVERVIEW.md)** - 三合一安裝包說明
-- **[快速安裝](docs/INSTALL_QUICK.md)** - 簡易安裝步驟
-- **[完整安裝指南](docs/INSTALL.md)** - 詳細安裝說明
-- **[快速開始](docs/QUICKSTART.md)** - 5 分鐘快速部署
-- **[文件清單](docs/archive/FILE_LIST.md)** - 完整文件列表
-- **[清理報告](docs/archive/CLEANUP_REPORT.md)** - 專案整理記錄
+### 🚀 入門
+- **[快速開始](docs/getting-started/QUICKSTART.md)** - 5 分鐘快速部署
+- **[快速安裝](docs/getting-started/INSTALL_QUICK.md)** - 簡易安裝步驟
+- **[完整安裝指南](docs/getting-started/INSTALL.md)** - 詳細安裝說明
+- **[Vagrant 使用指南](docs/getting-started/VAGRANT-GUIDE.md)** - Vagrant 操作說明
 
-### 操作指南
-- **[Docker 使用指南](docs/DOCKER-GUIDE.md)** - Docker 操作說明
-- **[容器訪問指南](docs/DOCKER-ACCESS.md)** - 進入容器和調試
-- **[Vagrant 使用指南](docs/VAGRANT-GUIDE.md)** - Vagrant 操作說明
-- **[前端啟動指南](docs/FRONTEND-GUIDE.md)** - React 前端運行方式
-- **[K8s Dashboard 指南](docs/K8S-DASHBOARD.md)** - Kubernetes 管理頁面
-- **[故障排查](docs/TROUBLESHOOTING.md)** - 常見問題解決
+### 🏗️ 基礎設施
+- **[Docker 使用指南](docs/infrastructure/DOCKER-GUIDE.md)** - Docker 操作說明
+- **[容器訪問指南](docs/infrastructure/DOCKER-ACCESS.md)** - 進入容器和調試
+- **[K8s Dashboard 指南](docs/infrastructure/K8S-DASHBOARD.md)** - Kubernetes 管理頁面
+- **[VM 存取指南](docs/infrastructure/VM-ACCESS.md)** - VM 登入與操作
 
-### API 文檔
-- **[購物 API](docs/SHOPPING_API.md)** - 電商功能 API
-- **[聊天 API](docs/CHAT_API.md)** - WebSocket 聊天 API
-- **[測試數據](docs/TEST_DATA.md)** - 測試數據說明
+### 🎨 前端
+- **[前端啟動指南](docs/frontend/FRONTEND-GUIDE.md)** - 前端運行方式
 
-### 其他
-- **[MySQL 配置](docs/MYSQL_SETUP.md)** - 數據庫配置說明
+### 🗄️ 資料庫
+- **[MySQL 配置](docs/database/MYSQL_SETUP.md)** - 數據庫配置說明
+- **[測試數據](docs/database/TEST_DATA.md)** - 測試數據說明
+
+### 🔧 故障排除
+- **[故障排查](docs/troubleshooting/TROUBLESHOOTING.md)** - 常見問題解決
+- **[Flannel 修復](docs/troubleshooting/FLANNEL-FIX.md)** - K8s 網路問題修復
+- **[Kong 路由修復](docs/troubleshooting/KONG-ROUTE-FIX.md)** - Kong Gateway 路由問題
+- **[重啟問題分析](docs/troubleshooting/RESTART-ISSUES-ANALYSIS.md)** - VM/K8s 重啟問題根因
+- **[重啟快速修復](docs/troubleshooting/RESTART-QUICK-FIX.md)** - 重啟後一鍵修復
+
+### 📡 API 文檔
+- **[購物 API](docs/api/SHOPPING_API.md)** - 電商功能 API
+- **[聊天 API](docs/api/CHAT_API.md)** - WebSocket 聊天 API
 
 ## 🛠️ 技術棧
 
@@ -124,7 +130,7 @@ start-dashboard.bat      # 啟動並訪問
 **文檔**：
 - [k8s-dashboard/README.md](k8s-dashboard/README.md) - 完整使用說明
 - [k8s-dashboard/PACKAGE_INFO.md](k8s-dashboard/PACKAGE_INFO.md) - 安裝包詳情
-- [docs/K8S-DASHBOARD.md](docs/K8S-DASHBOARD.md) - 詳細操作指南
+- [docs/infrastructure/K8S-DASHBOARD.md](docs/infrastructure/K8S-DASHBOARD.md) - 詳細操作指南
 
 ### 3. 📚 完整文檔包
 位置：`docs/`
@@ -136,17 +142,31 @@ start-dashboard.bat      # 啟動並訪問
 ```
 test/                                     # 專案根目錄
 ├── docs/                                 # 📚 文檔資料夾（11 個文檔）
-│   ├── QUICKSTART.md                     # 快速開始
-│   ├── INSTALL.md                        # 完整安裝指南
-│   ├── DOCKER-GUIDE.md                   # Docker 使用
-│   ├── DOCKER-ACCESS.md                  # 容器訪問
-│   ├── VAGRANT-GUIDE.md                  # Vagrant 使用
-│   ├── K8S-DASHBOARD.md                  # K8s Dashboard 指南
-│   ├── TROUBLESHOOTING.md                # 故障排查
-│   ├── SHOPPING_API.md                   # 購物 API
-│   ├── CHAT_API.md                       # 聊天 API
-│   ├── TEST_DATA.md                      # 測試數據
-│   └── MYSQL_SETUP.md                    # MySQL 配置
+│   ├── getting-started/                  # 🚀 入門指南
+│   │   ├── QUICKSTART.md
+│   │   ├── INSTALL.md
+│   │   ├── INSTALL_QUICK.md
+│   │   └── VAGRANT-GUIDE.md
+│   ├── api/                              # 📡 API 文件
+│   │   ├── SHOPPING_API.md
+│   │   └── CHAT_API.md
+│   ├── infrastructure/                   # 🏗️ 基礎設施
+│   │   ├── DOCKER-GUIDE.md
+│   │   ├── DOCKER-ACCESS.md
+│   │   ├── K8S-DASHBOARD.md
+│   │   └── VM-ACCESS.md
+│   ├── database/                         # 🗄️ 資料庫
+│   │   ├── MYSQL_SETUP.md
+│   │   └── TEST_DATA.md
+│   ├── frontend/                         # 🎨 前端
+│   │   └── FRONTEND-GUIDE.md
+│   ├── troubleshooting/                  # 🔧 故障排除
+│   │   ├── TROUBLESHOOTING.md
+│   │   ├── FLANNEL-FIX.md
+│   │   ├── KONG-ROUTE-FIX.md
+│   │   ├── RESTART-ISSUES-ANALYSIS.md
+│   │   └── RESTART-QUICK-FIX.md
+│   └── archive/                          # 📦 歷史紀錄
 │
 ├── tools/                                # 🛠️ 工具資料夾
 │   ├── install-vagrant-env.bat           # 📦 環境安裝 (原 install.bat)
@@ -244,7 +264,7 @@ vagrant ssh -c "docker compose ps"
 vagrant ssh -c "docker compose logs -f app"
 ```
 
-更多問題請參考 [故障排查指南](docs/TROUBLESHOOTING.md)
+更多問題請參考 [故障排查指南](docs/troubleshooting/TROUBLESHOOTING.md)
 
 ## 📊 功能特性
 
@@ -268,8 +288,8 @@ vagrant ssh -c "docker compose logs -f app"
 - 實時消息推送
 
 詳細 API 說明請查看：
-- [購物 API 文檔](docs/SHOPPING_API.md)
-- [聊天 API 文檔](docs/CHAT_API.md)
+- [購物 API 文檔](docs/api/SHOPPING_API.md)
+- [聊天 API 文檔](docs/api/CHAT_API.md)
 
 ## 📄 許可證
 

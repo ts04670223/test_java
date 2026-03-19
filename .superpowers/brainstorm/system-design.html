@@ -1,0 +1,269 @@
+<h2>目前系統架構分析</h2>
+<p class="subtitle">Spring Boot 電商平台 — 全覽架構圖</p>
+
+<style>
+  .arch-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  .layer {
+    border: 2px solid #444;
+    border-radius: 10px;
+    padding: 14px 18px;
+    background: #1e1e2e;
+  }
+  .layer-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #888;
+    margin-bottom: 10px;
+  }
+  .boxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .box {
+    background: #2a2a3e;
+    border: 1px solid #555;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .box .name { font-weight: 700; font-size: 14px; color: #e0e0ff; }
+  .box .detail { color: #888; font-size: 11px; margin-top: 3px; }
+  .box.highlight { border-color: #7c6af7; background: #242040; }
+  .box.warn { border-color: #e8a838; background: #2a2415; }
+  .box.danger { border-color: #e86060; background: #2a1515; }
+  .arrow {
+    text-align: center;
+    font-size: 24px;
+    color: #555;
+    margin: 2px 0;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+    font-weight: 600;
+  }
+  .badge-green { background: #1a4a2a; color: #5dd87e; }
+  .badge-yellow { background: #4a3a1a; color: #e8c038; }
+  .badge-red { background: #4a1a1a; color: #e07070; }
+  .badge-blue { background: #1a2a4a; color: #60b0e8; }
+  .issues-section {
+    background: #1e1515;
+    border: 2px solid #883030;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-top: 8px;
+  }
+  .issues-section .layer-title { color: #e07070; }
+  .issue-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #2a2020;
+  }
+  .issue-item:last-child { border-bottom: none; }
+  .issue-icon { font-size: 18px; flex-shrink: 0; }
+  .issue-text .title { font-weight: 600; color: #e0b0b0; font-size: 13px; }
+  .issue-text .desc { color: #888; font-size: 12px; margin-top: 2px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+</style>
+
+<div class="arch-container">
+
+  <!-- Client Layer -->
+  <div class="layer">
+    <div class="layer-title">🖥️ Client Layer</div>
+    <div class="boxes">
+      <div class="box highlight">
+        <div class="name">Vue 3 SPA Frontend</div>
+        <div class="detail">Vue Router · Pinia · Vuetify 3 · Axios<br>路由守衛 · JWT 本地存儲</div>
+      </div>
+      <div class="box">
+        <div class="name">外部瀏覽器</div>
+        <div class="detail">Vite 開發伺服器 (5173)<br>React-like SPA 行為</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">↓ HTTP/HTTPS ↓</div>
+
+  <!-- Gateway Layer -->
+  <div class="layer">
+    <div class="layer-title">🔀 API Gateway Layer</div>
+    <div class="boxes">
+      <div class="box highlight">
+        <div class="name">Kong Gateway <span class="badge badge-yellow">需手動配置</span></div>
+        <div class="detail">NodePort 30000 (HTTP) / 30443 (HTTPS)<br>路由: /api/*, /swagger-ui/*, /grafana, /prometheus</div>
+      </div>
+      <div class="box warn">
+        <div class="name">Kong 路由 <span class="badge badge-yellow">無持久配置</span></div>
+        <div class="detail">透過 Job/Shell 腳本設定<br>重啟後需重新配置</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">↓ ClusterIP ↓</div>
+
+  <!-- Application Layer -->
+  <div class="layer">
+    <div class="layer-title">☕ Application Layer (Spring Boot 3.2 / Java 17)</div>
+    <div class="two-col">
+      <div>
+        <div class="boxes" style="flex-direction:column">
+          <div class="box">
+            <div class="name">AuthController <span class="badge badge-green">JWT</span></div>
+            <div class="detail">登入 · 註冊 · Token 刷新</div>
+          </div>
+          <div class="box">
+            <div class="name">WebAuthnController <span class="badge badge-blue">Passkeys</span></div>
+            <div class="detail">Yubico WebAuthn · FIDO2</div>
+          </div>
+          <div class="box">
+            <div class="name">ProductController</div>
+            <div class="detail">CRUD · 搜尋 · 類別篩選</div>
+          </div>
+          <div class="box">
+            <div class="name">CartController</div>
+            <div class="detail">加入 · 更新 · 清空</div>
+          </div>
+          <div class="box">
+            <div class="name">OrderController</div>
+            <div class="detail">建立 · 查詢 · 狀態</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="boxes" style="flex-direction:column">
+          <div class="box">
+            <div class="name">UserController</div>
+            <div class="detail">個人資料 · 管理員</div>
+          </div>
+          <div class="box">
+            <div class="name">ChatController</div>
+            <div class="detail">訊息 · 已讀 · 歷史</div>
+          </div>
+          <div class="box warn">
+            <div class="name">AiController <span class="badge badge-yellow">已停用</span></div>
+            <div class="detail">Ollama LLM · 串流 SSE<br>商品推薦 · AI 搜尋</div>
+          </div>
+          <div class="box">
+            <div class="name">WishlistController</div>
+            <div class="detail">願望清單管理</div>
+          </div>
+          <div class="box">
+            <div class="name">Spring Security</div>
+            <div class="detail">JWT Filter · BCrypt · CORS<br>CSRF 已停用 · 無狀態</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">↓ JPA / Redis / SQLite ↓</div>
+
+  <!-- Data Layer -->
+  <div class="layer">
+    <div class="layer-title">🗄️ Data Layer</div>
+    <div class="boxes">
+      <div class="box highlight">
+        <div class="name">MySQL 8.0 <span class="badge badge-green">主資料庫</span></div>
+        <div class="detail">HikariCP (max 10)<br>Spring JPA / Hibernate · DDL: update<br>13 個 Entity 表格</div>
+      </div>
+      <div class="box highlight">
+        <div class="name">Redis 7 <span class="badge badge-green">快取</span></div>
+        <div class="detail">@EnableCaching<br>Session / JWT Token<br>appendonly 持久化</div>
+      </div>
+      <div class="box warn">
+        <div class="name">SQLite <span class="badge badge-yellow">聊天訊息</span></div>
+        <div class="detail">chat.db (本地檔案)<br>ChatMessage 獨立資料庫</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">↓ Kubernetes 底層 ↓</div>
+
+  <!-- Infrastructure Layer -->
+  <div class="layer">
+    <div class="layer-title">☸️ Kubernetes / Infrastructure Layer</div>
+    <div class="boxes">
+      <div class="box">
+        <div class="name">Deployment (app)</div>
+        <div class="detail">副本: 1 · 8080 端口<br>Init Containers: 等待 MySQL+Redis</div>
+      </div>
+      <div class="box warn">
+        <div class="name">HPA <span class="badge badge-yellow">max=1</span></div>
+        <div class="detail">目前無自動擴展<br>CPU 閾值: 80%</div>
+      </div>
+      <div class="box">
+        <div class="name">PersistentVolumeClaims (3)</div>
+        <div class="detail">mysql-data · mysql-claim1<br>redis-data</div>
+      </div>
+      <div class="box">
+        <div class="name">Monitoring Namespace</div>
+        <div class="detail">Prometheus v2.48 (NodePort 30090)<br>Grafana 10.2.2 (NodePort 30300)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Issues Found -->
+  <div class="issues-section">
+    <div class="layer-title">⚠️ 已發現的架構問題</div>
+    <div class="issue-item">
+      <div class="issue-icon">🔐</div>
+      <div class="issue-text">
+        <div class="title">硬編碼密碼 / 明文 Secrets</div>
+        <div class="desc">MySQL 密碼 (springboot123)、JWT secret 直接寫在設定檔與 K8s YAML 中，未使用 Kubernetes Secret</div>
+      </div>
+    </div>
+    <div class="issue-item">
+      <div class="issue-icon">📦</div>
+      <div class="issue-text">
+        <div class="title">SQLite 聊天 DB 與 K8s 不相容</div>
+        <div class="desc">聊天訊息存在本地 chat.db 檔案，多副本或 Pod 重啟後資料會消失，應遷移至 MySQL 或 Redis</div>
+      </div>
+    </div>
+    <div class="issue-item">
+      <div class="issue-icon">🔀</div>
+      <div class="issue-text">
+        <div class="title">Kong 路由無持久狀態</div>
+        <div class="desc">Kong 路由透過腳本動態設定，K8s Pod 重啟後需重新執行配置</div>
+      </div>
+    </div>
+    <div class="issue-item">
+      <div class="issue-icon">📈</div>
+      <div class="issue-text">
+        <div class="title">HPA 最大副本數設為 1</div>
+        <div class="desc">無法自動水平擴展，失去 HPA 意義</div>
+      </div>
+    </div>
+    <div class="issue-item">
+      <div class="issue-icon">🤖</div>
+      <div class="issue-text">
+        <div class="title">AI 功能未完整整合</div>
+        <div class="desc">AiController 存在但被停用，Ollama 部署有對應 YAML，但尚未與主應用連通</div>
+      </div>
+    </div>
+    <div class="issue-item">
+      <div class="issue-icon">💾</div>
+      <div class="issue-text">
+        <div class="title">JPA DDL: update (非 validate)</div>
+        <div class="desc">生產環境應使用 validate 或 Flyway/Liquibase 管理 schema，避免意外自動修表</div>
+      </div>
+    </div>
+  </div>
+
+</div>
