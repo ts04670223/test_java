@@ -57,3 +57,11 @@ Desktop.ini
 *.h2.db
 
 frontend/node_modules
+# Git Worktrees
+.worktrees/
+# Local development secrets
+app-secret.yaml
+src/main/resources/application-local.properties
+# Brainstorm server artifacts
+server-out*.txt
+server-err*.txt
