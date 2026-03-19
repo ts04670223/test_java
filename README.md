@@ -57,6 +57,7 @@ exit                        # 退出 VM
 - **[容器訪問指南](docs/infrastructure/DOCKER-ACCESS.md)** - 進入容器和調試
 - **[K8s Dashboard 指南](docs/infrastructure/K8S-DASHBOARD.md)** - Kubernetes 管理頁面
 - **[VM 存取指南](docs/infrastructure/VM-ACCESS.md)** - VM 登入與操作
+- **[監控系統指南](docs/infrastructure/MONITORING.md)** - Prometheus + Grafana 訪問與操作
 
 ### 🎨 前端
 - **[前端啟動指南](docs/frontend/FRONTEND-GUIDE.md)** - 前端運行方式
@@ -135,7 +136,7 @@ start-dashboard.bat      # 啟動並訪問
 ### 3. 📚 完整文檔包
 位置：`docs/`
 
-包含所有操作指南、API 文檔、故障排查等 13 個文檔文件。
+按類別分了 6 個子目錄，包含入門、API、基礎設施、資料庫、前端、故障排除等 19 份數檔。
 
 ## 📁 專案結構
 
@@ -154,7 +155,8 @@ test/                                     # 專案根目錄
 │   │   ├── DOCKER-GUIDE.md
 │   │   ├── DOCKER-ACCESS.md
 │   │   ├── K8S-DASHBOARD.md
-│   │   └── VM-ACCESS.md
+│   │   ├── VM-ACCESS.md
+│   │   └── MONITORING.md
 │   ├── database/                         # 🗄️ 資料庫
 │   │   ├── MYSQL_SETUP.md
 │   │   └── TEST_DATA.md
@@ -166,7 +168,7 @@ test/                                     # 專案根目錄
 │   │   ├── KONG-ROUTE-FIX.md
 │   │   ├── RESTART-ISSUES-ANALYSIS.md
 │   │   └── RESTART-QUICK-FIX.md
-│   └── archive/                          # 📦 歷史紀錄
+│   └── superpowers/                      # 🧠 AI 工具產生的計畫文件
 │
 ├── tools/                                # 🛠️ 工具資料夾
 │   ├── install-vagrant-env.bat           # 📦 環境安裝 (原 install.bat)
