@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.example.demo.dto.AiChatRequest;
@@ -30,11 +31,8 @@ import jakarta.validation.constraints.NotBlank;
 /**
  * 本地 LLM（Ollama）API
  * 基礎路由：/api/ai
- *
- * TODO: AI 功能暫時停用 — 移除 @RestController 使 Spring 不註冊此 Controller，
- *       所有 /api/ai/* 端點均不可存取。恢復時改回 @RestController 即可。
  */
-// @RestController  // TODO: AI 功能暫時停用
+@RestController
 @RequestMapping("/api/ai")
 @Tag(name = "AI 助手", description = "本地 LLM（qwen2.5:0.5b via Ollama）相關 API")
 public class AiController {

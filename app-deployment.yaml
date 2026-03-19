@@ -36,17 +36,28 @@ spec:
             - name: SERVER_PORT
               value: "8080"
             - name: SPRING_DATASOURCE_PASSWORD
-              value: springboot123
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: db-password
             - name: SPRING_DATASOURCE_URL
               value: jdbc:mysql://mysql:3306/spring_boot_demo?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Taipei&allowPublicKeyRetrieval=true
             - name: SPRING_DATASOURCE_USERNAME
-              value: springboot
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: db-username
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: jwt-secret
             - name: SPRING_DATA_REDIS_HOST
               value: redis
             - name: SPRING_DATA_REDIS_PORT
               value: "6379"
             - name: SPRING_JPA_HIBERNATE_DDL_AUTO
-              value: update
+              value: validate
             - name: SPRING_JPA_SHOW_SQL
               value: "true"
             - name: TZ
