@@ -29,6 +29,32 @@ spec:
       # 使 spring 使用者（GID 1000）可以寫入 /app/logs
       securityContext:
         fsGroup: 1000
+      # 等待 MySQL 和 Redis 就緒後才啟動 App，避免啟動時連線失敗
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - |
+              echo "等待 MySQL 就緒..."
+              until nc -z mysql 3306; do
+                echo "MySQL 尚未就緒，等待 3 秒..."
+                sleep 3
+              done
+              echo "MySQL 已就緒！"
+        - name: wait-for-redis
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - |
+              echo "等待 Redis 就緒..."
+              until nc -z redis 6379; do
+                echo "Redis 尚未就緒，等待 3 秒..."
+                sleep 3
+              done
+              echo "Redis 已就緒！"
       containers:
         - env:
             - name: JAVA_OPTS
@@ -94,10 +120,10 @@ spec:
               path: /actuator/health
               port: 8080
               scheme: HTTP
-            initialDelaySeconds: 30  # 應用一啟動就開始嘗試連接
-            periodSeconds: 10        # 高頻率檢查，抓準啟動完成的那一刻
+            initialDelaySeconds: 20  # initContainers 已確保依賴就緒，縮短初始等待
+            periodSeconds: 10
             timeoutSeconds: 5
-            failureThreshold: 18    # 2s * 60 = 120s 總等待時間
+            failureThreshold: 24    # 20 + 10*24 = 260s 總等待時間
           # 資源限制
           resources:
             requests:
