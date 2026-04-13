@@ -5,9 +5,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.demo.event.OrderCreatedEvent;
+import com.example.demo.event.OrderStatusChangedEvent;
 import com.example.demo.model.Cart;
 import com.example.demo.model.CartItem;
 import com.example.demo.model.Order;
@@ -25,18 +28,18 @@ public class OrderService {
     private final UserRepository userRepository;
     private final CartService cartService;
     private final ProductService productService;
-    private final NotificationService notificationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public OrderService(OrderRepository orderRepository,
             UserRepository userRepository,
             CartService cartService,
             ProductService productService,
-            NotificationService notificationService) {
+            ApplicationEventPublisher eventPublisher) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.cartService = cartService;
         this.productService = productService;
-        this.notificationService = notificationService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -91,8 +94,15 @@ public class OrderService {
         // 清空購物車
         cartService.clearCart(userId);
 
-        // 非同步發送通知
-        notificationService.sendOrderConfirmation(savedOrder);
+        // 發布訂單建立事件（取代直接呼叫 NotificationService）
+        // OrderEventListener 將從訂事 commit 後非同步統公
+        eventPublisher.publishEvent(new OrderCreatedEvent(
+                this,
+                savedOrder.getId(),
+                savedOrder.getOrderNumber(),
+                user.getId(),
+                user.getUsername(),
+                savedOrder.getTotalAmount()));
 
         return savedOrder;
     }
@@ -122,12 +132,26 @@ public class OrderService {
      * 更新訂單狀態
      */
     @Transactional
-    public Order updateOrderStatus(Integer orderId, OrderStatus status) {
+    public Order updateOrderStatus(Integer orderId, OrderStatus newStatus) {
         Order order = orderRepository.findById(Objects.requireNonNull(orderId))
                 .orElseThrow(() -> new RuntimeException("找不到訂單，ID: " + orderId));
 
-        order.setStatus(status);
-        return orderRepository.save(order);
+        OrderStatus oldStatus = order.getStatus();
+        order.setStatus(newStatus);
+        Order savedOrder = orderRepository.save(order);
+
+        // 發布訂單狀態變更事件
+        if (!oldStatus.equals(newStatus)) {
+            eventPublisher.publishEvent(new OrderStatusChangedEvent(
+                    this,
+                    savedOrder.getId(),
+                    savedOrder.getOrderNumber(),
+                    savedOrder.getUser().getId(),
+                    oldStatus,
+                    newStatus));
+        }
+
+        return savedOrder;
     }
 
     /**

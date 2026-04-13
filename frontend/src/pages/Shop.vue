@@ -292,9 +292,10 @@ const filteredProducts = computed(() => {
 async function loadProducts() {
   try {
     const response = await productAPI.getProducts()
-    const data = response.data?.data || response.data || []
-    products.value = Array.isArray(data) ? data : []
-    categories.value = [...new Set(data.map(p => p.category).filter(Boolean))]
+    const data = response.data?.data || response.data || {}
+    const list = Array.isArray(data) ? data : (data.content || [])
+    products.value = list
+    categories.value = [...new Set(list.map(p => p.category).filter(Boolean))]
     loading.value = false
   } catch {
     products.value = []

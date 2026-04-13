@@ -1,8 +1,7 @@
 package com.example.demo.controller;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,13 +18,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.dto.ApiResponse;
 import com.example.demo.dto.CreateOrderRequest;
+import com.example.demo.dto.OrderResponseDto;
 import com.example.demo.model.Order;
 import com.example.demo.model.OrderStatus;
+import com.example.demo.model.User;
 import com.example.demo.service.OrderService;
 
 import jakarta.validation.Valid;
 
+/**
+ * 訂單控制器
+ * 所有回應統一使用 ApiResponse<T> 包裝，例外由 GlobalExceptionHandler 統一處理
+ */
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
@@ -40,168 +46,116 @@ public class OrderController {
 
     /**
      * 從購物車建立訂單
+     * POST /api/orders
      */
     @PostMapping
-    public ResponseEntity<?> createOrder(@Valid @RequestBody CreateOrderRequest request) {
-        try {
-            Order order = orderService.createOrderFromCart(
-                    request.getUserId(),
-                    request.getShippingAddress(),
-                    request.getPhone(),
-                    request.getNote());
-            log.info("訂單建立成功: orderId={}, userId={}", order.getId(), request.getUserId());
-            return ResponseEntity.status(HttpStatus.CREATED).body(order);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "建立訂單失敗: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+    public ResponseEntity<ApiResponse<OrderResponseDto>> createOrder(
+            @Valid @RequestBody CreateOrderRequest request) {
+        Order order = orderService.createOrderFromCart(
+                request.getUserId(),
+                request.getShippingAddress(),
+                request.getPhone(),
+                request.getNote());
+        log.info("訂單建立成功: orderId={}, userId={}", order.getId(), request.getUserId());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("訂單建立成功", OrderResponseDto.from(order)));
     }
 
     /**
      * 取得用戶的所有訂單
+     * GET /api/orders/user/{userId}
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getUserOrders(@PathVariable Long userId, Authentication authentication) {
-        // 驗證是否為本人或管理員（不依賴 SpEL 參數綁定）
-        com.example.demo.model.User currentUser = (com.example.demo.model.User) authentication.getPrincipal();
+    public ResponseEntity<ApiResponse<List<OrderResponseDto>>> getUserOrders(
+            @PathVariable Long userId, Authentication authentication) {
+        User currentUser = (User) authentication.getPrincipal();
         boolean isAdmin = currentUser.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         if (!currentUser.getId().equals(userId) && !isAdmin) {
-            log.warn("未授權存取他人訂單: currentUserId={}, requestedUserId={}", currentUser.getId(), userId);
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "無權限存取他人訂單");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+            log.warn("無權限存取他人資料: currentUserId={}, requestedUserId={}", currentUser.getId(), userId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("無法存取他人資料"));
         }
-        try {
-            List<Order> orders = orderService.getUserOrders(userId);
-            return ResponseEntity.ok(orders);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "取得訂單列表失敗: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+        List<OrderResponseDto> orders = orderService.getUserOrders(userId)
+                .stream().map(OrderResponseDto::from).collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success("取得訂單列表成功", orders));
     }
 
     /**
-     * 根據ID取得訂單
+     * 根據 ID 取得訂單
+     * GET /api/orders/{orderId}
      */
     @GetMapping("/{orderId}")
-    public ResponseEntity<?> getOrderById(@PathVariable Integer orderId) {
-        try {
-            return orderService.getOrderById(orderId)
-                    .map(order -> ResponseEntity.ok((Object) order))
-                    .orElseGet(() -> {
-                        Map<String, String> error = new HashMap<>();
-                        error.put("error", "找不到訂單");
-                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-                    });
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "取得訂單失敗: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+    public ResponseEntity<ApiResponse<OrderResponseDto>> getOrderById(
+            @PathVariable Integer orderId) {
+        Order order = orderService.getOrderById(orderId)
+                .orElseThrow(() -> new RuntimeException("Not Found: order id " + orderId));
+        return ResponseEntity.ok(ApiResponse.success(OrderResponseDto.from(order)));
     }
 
     /**
-     * 根據訂單編號取得訂單
+     * 根據訂單編號查詢訂單
+     * GET /api/orders/number/{orderNumber}
      */
     @GetMapping("/number/{orderNumber}")
-    public ResponseEntity<?> getOrderByNumber(@PathVariable String orderNumber) {
-        try {
-            Order order = orderService.getOrderByOrderNumber(orderNumber);
-            if (order != null) {
-                return ResponseEntity.ok(order);
-            } else {
-                Map<String, String> error = new HashMap<>();
-                error.put("error", "找不到訂單");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-            }
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "取得訂單失敗: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    public ResponseEntity<ApiResponse<OrderResponseDto>> getOrderByNumber(
+            @PathVariable String orderNumber) {
+        Order order = orderService.getOrderByOrderNumber(orderNumber);
+        if (order == null) {
+            throw new RuntimeException("找不到訂單編號: " + orderNumber);
         }
+        return ResponseEntity.ok(ApiResponse.success(OrderResponseDto.from(order)));
     }
 
     /**
      * 更新訂單狀態（管理員功能）
+     * PUT /api/orders/{orderId}/status?status=SHIPPED
      */
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{orderId}/status")
-    public ResponseEntity<?> updateOrderStatus(
+    public ResponseEntity<ApiResponse<OrderResponseDto>> updateOrderStatus(
             @PathVariable Integer orderId,
             @RequestParam OrderStatus status) {
-        try {
-            Order order = orderService.updateOrderStatus(orderId, status);
-            log.info("訂單狀態已更新: orderId={}, newStatus={}", orderId, status);
-            return ResponseEntity.ok(order);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "更新訂單狀態失敗: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+        Order order = orderService.updateOrderStatus(orderId, status);
+        log.info("訂單狀態已更新: orderId={}, newStatus={}", orderId, status);
+        return ResponseEntity.ok(ApiResponse.success("訂單狀態已更新", OrderResponseDto.from(order)));
     }
 
     /**
      * 取消訂單
+     * POST /api/orders/{orderId}/cancel?userId=1
      */
     @PostMapping("/{orderId}/cancel")
-    public ResponseEntity<?> cancelOrder(
+    public ResponseEntity<ApiResponse<OrderResponseDto>> cancelOrder(
             @PathVariable Integer orderId,
             @RequestParam Long userId) {
-        try {
-            Order order = orderService.cancelOrder(orderId, userId);
-            log.info("訂單已取消: orderId={}, userId={}", orderId, userId);
-            return ResponseEntity.ok(order);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "取消訂單失敗: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+        Order order = orderService.cancelOrder(orderId, userId);
+        log.info("訂單已取消: orderId={}, userId={}", orderId, userId);
+        return ResponseEntity.ok(ApiResponse.success("訂單已取消", OrderResponseDto.from(order)));
     }
 
     /**
      * 取得所有訂單（管理員功能）
+     * GET /api/orders
      */
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<?> getAllOrders() {
-        try {
-            List<Order> orders = orderService.getAllOrders();
-            return ResponseEntity.ok(orders);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "取得訂單列表失敗: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+    public ResponseEntity<ApiResponse<List<OrderResponseDto>>> getAllOrders() {
+        List<OrderResponseDto> orders = orderService.getAllOrders()
+                .stream().map(OrderResponseDto::from).collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success("取得所有訂單成功", orders));
     }
 
     /**
      * 根據狀態查詢訂單（管理員功能）
+     * GET /api/orders/status/{status}
      */
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/status/{status}")
-    public ResponseEntity<?> getOrdersByStatus(@PathVariable OrderStatus status) {
-        try {
-            List<Order> orders = orderService.getOrdersByStatus(status);
-            return ResponseEntity.ok(orders);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "查詢訂單失敗: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+    public ResponseEntity<ApiResponse<List<OrderResponseDto>>> getOrdersByStatus(
+            @PathVariable OrderStatus status) {
+        List<OrderResponseDto> orders = orderService.getOrdersByStatus(status)
+                .stream().map(OrderResponseDto::from).collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success("查詢訂單成功", orders));
     }
 }
